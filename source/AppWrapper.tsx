@@ -7,6 +7,7 @@ import {App} from './App';
 import {WelcomeView} from './WelcomeView';
 
 import {Item} from './ItemSchema';
+import { users } from './models';
 
 const LoadingIndicator = () => {
   return (
@@ -21,7 +22,7 @@ export const AppWrapper = () => {
     <AppProvider id={appId} baseUrl={baseUrl}>
       <UserProvider fallback={WelcomeView}>
         <RealmProvider
-          schema={[Item]}
+          schema={[Item, users]}
           sync={{
             flexible: true,
             onError: (_session, error) => {
