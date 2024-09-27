@@ -7,7 +7,7 @@ import {App} from './App';
 import {WelcomeView} from './WelcomeView';
 
 import {Item} from './ItemSchema';
-import { users } from './models';
+import { users } from './models/Models';
 
 const LoadingIndicator = () => {
   return (

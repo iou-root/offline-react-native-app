@@ -1,2 +1,3 @@
-export {default as users} from './User';
-export {default as Feature} from './Feature';
+import { users, Feature } from './Models';
+
+export = {users, Feature} 

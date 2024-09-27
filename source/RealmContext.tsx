@@ -1,13 +1,13 @@
-// import { } from '@realm/react';
-const { createRealmContext } = require('@realm/react');
-const { users, Feature } = require('./models');
-const { ItemSchema } = require('./ItemSchema.tsx');
+import { createRealmContext } from '@realm/react';
+import { Item } from "./ItemSchema";
+import { Feature, users } from "./models/Models";
+
 
 export const realmContext = createRealmContext({
   schema: [
     users,
     Feature,
-    ItemSchema
+    Item
   ],
   schemaVersion: 1
 });

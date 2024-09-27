@@ -1,11 +1,16 @@
 import React, {useCallback, useState} from 'react';
 import Realm from 'realm';
-import {useApp} from '@realm/react';
+import {useApp, useEmailPasswordAuth, useAuthResult, useAuth } from '@realm/react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {StyleSheet, Text, View, Alert, Image, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text, View, Alert, Image, TouchableOpacity, ScrollView, ImageBackground} from 'react-native';
 import {Input, Button} from '@rneui/base';
 import {colors} from './Colors';
 import icons from './constants/icons';
+import { realmContext } from './RealmContext';
+import { COLORS } from './constants/theme';
+import images from './constants/images';
+
+
 
 export function WelcomeView(): React.ReactElement {
   const [email, setEmail] = useState('');
@@ -19,12 +24,15 @@ export function WelcomeView(): React.ReactElement {
     dateOfBirth: new Date(),
     role: String()
   });
+  const app = useApp();
 
   // state values for toggable visibility of features in the UI
   const [passwordHidden, setPasswordHidden] = useState(true);
-  const [isInSignUpMode, setIsInSignUpMode] = useState(true);
+  const [isInSignUpMode, setIsInSignUpMode] = useState(false);
+  
+  
 
-  const app = useApp();
+
 
   // signIn() uses the emailPassword authentication provider to log in
   const signIn = useCallback(async () => {
@@ -40,6 +48,7 @@ export function WelcomeView(): React.ReactElement {
       Alert.alert(`Failed to sign in: ${error?.message}`);
     }
   }, [signIn]);
+  
 
   // onPressSignUp() registers the user and then calls signIn to log the user in
   // const onPressSignUp = useCallback(async () => {
@@ -51,51 +60,66 @@ export function WelcomeView(): React.ReactElement {
   //   }
   // }, [signIn, app, values]);
   const onPressSignUp = useCallback(async () => {
-    const { email, password} = values;
+    const { email, password, firstName, lastName, dateOfBirth, role, phone } = values;
     try {
-      await app.emailPasswordAuth.registerUser({email, password});
-      
-      await signIn();
-      
-      
-      const user = app.currentUser;
-
-      
-      const newUser = await user?.functions.onUserCreation(values)
+      const reg = await app.emailPasswordAuth.registerUser(values)
       .then(res => {
-        console.log(res, "Success Response")
-        return res;
+        console.log(res, "SUCCESS")
+        setIsInSignUpMode(false)
+        return res
       })
       .catch(err => {
-        console.log(err, "Error Response")
-        return err;
-      })
+        console.log(err, 'Error')
+        return
+      });
       
-      console.log(newUser, "newUser")
-  
     } catch (error: any) {
       Alert.alert(`Failed to sign up: ${error?.message}`);
     }
   }, [signIn, app, values]);
   
   
-  console.log(values)
+  console.log(isInSignUpMode)
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.viewWrapper}>
-        <Text style={styles.title}>My Sync App</Text>
-        <Text style={styles.subtitle}>
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#021024',justifyContent: 'center',}}>
+    <View style={{ alignSelf: 'center', alignItems: 'center', justifyContent: 'center', borderWidth: 1, padding: 10, width: 110, height: 110,  backgroundColor: COLORS.white2, borderColor: COLORS.white2, top: '9%', borderRadius: 666, zIndex: 2}}>
+      <Image source={icons.mongodb} style={{height: 80, width: 80, resizeMode: 'contain'}}/>
+    </View>
+      <View style={{...styles.viewWrapper, borderWidth: .6, borderColor: COLORS.gray900, margin: 22, height: isInSignUpMode ? '90%' : '50%', backgroundColor: '#001e2b', borderTopRightRadius: 60, borderBottomLeftRadius: 60, borderTopLeftRadius: 10, borderBottomRightRadius: 10}}>
+              {/* <ImageBackground source={images.loyverse} resizeMode='contain' style={{flex: 1, position: 'absolute', height: '100%', width: '100%', opacity: .3, bottom: '50%', borderBottomRightRadius: 14,  }}>
+      </ImageBackground> */}
+      
+        {/* <Text style={{...styles.title, marginLeft: 10, marginBottom: 20, marginTop: 150, fontWeight: '600', fontSize: 18}}>{ isInSignUpMode ? 'Business Registration:' : ''}</Text> */}
+       {/*  <Text style={styles.subtitle}>
           Please log in or register with a Device Sync user account. This is
           separate from your Atlas Cloud login.
+        </Text> */}
+        
+        <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'flex-end'}}>
+        <Text style={{ fontWeight: '500', fontSize: 12, color: COLORS.white2,}}>
+          Email
         </Text>
+          <Text style={{ color: COLORS.red}}>*</Text>
+        </View> 
         <Input
-          placeholder="email"
+          placeholder="business@mail.com"
+          placeholderTextColor={COLORS.darkgray}
           onChangeText={(text) => setValues({...values, email: text})}
           autoCapitalize="none"
+          inputStyle={{color: COLORS.white2, fontWeight: '400'}}
+          labelStyle={{ fontWeight: '400'}}
         />
+        
+        <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'flex-end'}}>
+        <Text style={{ fontWeight: '500', fontSize: 12, color: COLORS.white2 }}>
+          Password
+        </Text>
+          <Text style={{ color: COLORS.red}}>*</Text>
+        </View>
         <Input
-          placeholder="password"
+          placeholder="must contain 6 or more characters"
+          placeholderTextColor={COLORS.darkgray}
           onChangeText={(text) => setValues({...values, password: text})}
           secureTextEntry={passwordHidden}
           rightIcon={
@@ -110,14 +134,29 @@ export function WelcomeView(): React.ReactElement {
               setPasswordHidden(!passwordHidden);
             }}
             style={{
-
               
             }}>
-            <Image source={passwordHidden ? icons.hideEye : icons.showEye}/>
+            <Image source={passwordHidden ? icons.hideEye : icons.showEye} style={{height: 0, width: 20,}}/>
             </TouchableOpacity>
           }
         />
-        <View style={{ alignSelf: 'flex-start',  width: '50%', flexDirection: 'row'}}>
+        {isInSignUpMode ? (
+          <>
+        
+        <View style={{ marginLeft: 10, flexDirection: 'row', alignItems: 'flex-end'}}>
+        <Text style={{ fontWeight: '500', fontSize: 12, color: COLORS.white2 }}>
+          Store name
+        </Text>
+          <Text style={{ color: COLORS.red}}>*</Text>
+        </View> 
+        <Input
+          placeholder="Business name"
+          onChangeText={(text) => setValues({...values, email: text})}
+          autoCapitalize="none"
+          placeholderTextColor={COLORS.darkgray}
+        />
+        
+        {/* <View style={{ alignSelf: 'flex-start',  width: '50%', flexDirection: 'row'}}>
           <Input
             placeholder="First name"
             onChangeText={(text) => setValues({...values, firstName: text})}
@@ -146,34 +185,42 @@ export function WelcomeView(): React.ReactElement {
             autoCapitalize="none"
             style={{ maxWidth: '80%' }}
             />
-          </View>
-        {isInSignUpMode ? (
-          <>
+          </View> */}
+        <View style={{  alignItems: 'center'}}>
+          <Text style={{  marginBottom: 30, marginTop: 30, textAlign: 'center', color: COLORS.white}}>
+            I have read the terms and agree with the <Text style={{ color: COLORS.primary, textDecorationLine: 'underline'}}>terms of use</Text> and <Text style={{ color: COLORS.primary, textDecorationLine: 'underline'}}>
+            privacy policy</Text>
+          </Text>
+        
             <Button
-              title="PROCEED"
+              title="SUBMIT"
+              disabled={!values.email || !values.password ? true : false}
               buttonStyle={styles.mainButton}
               onPress={onPressSignUp}
-            />
+              />
             <Button
               title="Already have an account? Log In"
               type="clear"
-              titleStyle={styles.secondaryButton}
+              titleStyle={{...styles.secondaryButton, color: COLORS.white2}}
               onPress={() => setIsInSignUpMode(!isInSignUpMode)}
-            />
+              />
+              </View>
           </>
         ) : (
           <>
+          <View style={{ flex: 1, alignSelf: 'center'}}>
             <Button
               title="Log In"
               buttonStyle={styles.mainButton}
               onPress={onPressSignIn}
-            />
+              />
             <Button
               title="Don't have an account? Create Account"
               type="clear"
               titleStyle={styles.secondaryButton}
               onPress={() => setIsInSignUpMode(!isInSignUpMode)}
-            />
+              />
+              </View>
           </>
         )}
       </View>
@@ -184,8 +231,10 @@ export function WelcomeView(): React.ReactElement {
 const styles = StyleSheet.create({
   viewWrapper: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
+    padding: 32
+    
   },
   title: {
     fontSize: 18,
